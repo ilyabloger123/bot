@@ -4,7 +4,6 @@ from aiogram import Router, types, F
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import LinkPreviewOptions
 from aiogram.types import CallbackQuery
 
 from services.password_generator import PasswordGenerator
