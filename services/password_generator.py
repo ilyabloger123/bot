@@ -1,7 +1,7 @@
 import secrets
 import string
 import random
-from typing import Optional
+from typing import Optional, List
 
 class PasswordGenerator:
     def __init__(self):
