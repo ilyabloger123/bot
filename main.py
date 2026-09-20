@@ -3,7 +3,6 @@ import logging
 import sys
 import os
 
-from aiogram.client.default import DefaultBotProperties
 from aiohttp import web
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import Update
@@ -13,6 +12,7 @@ from handlers.help import router as help_router
 from handlers.password_handlers import router as password_router
 from handlers.inline_handlers import router as inline_router
 from handlers.settings_handler import router as settings_router
+from aiogram.client.default import DefaultBotProperties
 
 logging.basicConfig(
     level=logging.INFO,
