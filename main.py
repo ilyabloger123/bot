@@ -3,6 +3,7 @@ import logging
 import sys
 import os
 
+from aiogram.client.default import DefaultBotProperties
 from aiohttp import web
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import Update
@@ -23,7 +24,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-bot = Bot(token=Config.BOT_TOKEN)
+bot = Bot(token=Config.BOT_TOKEN, default=DefaultBotProperties(link_preview_is_disabled=True))
 dp = Dispatcher()
 
 dp.include_router(start_router)
