@@ -42,7 +42,7 @@ async def handle_webhook(request):
         await dp.feed_update(bot, update)
         return web.json_response({"status": "ok"})
     except Exception as e:
-        logger.error(f"main.py 45{e}")
+        logger.error(f"main.py 45: {e}")
         return web.json_response({"error": str(e)}, status=500)
 
 async def on_startup(app):
@@ -53,7 +53,7 @@ async def on_shutdown(app):
     await bot.delete_webhook()
     await bot.session.close()
 
-async def main():
+def main():
     app = web.Application()
     app.router.add_post(WEBHOOK_PATH, handle_webhook)
     app.router.add_get("/", lambda r: web.json_response({"status": "running"}))
@@ -67,4 +67,4 @@ async def main():
     web.run_app(app, port=port, host="0.0.0.0")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
