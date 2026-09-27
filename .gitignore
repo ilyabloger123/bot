@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+.env
+*.env
+password.json
+secret.key
+*.json.bak
+
+.idea/
+*.swp
