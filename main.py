@@ -72,7 +72,7 @@ async def handle_webhook(request):
         return web.json_response({"error": str(e)}, status=500)
 
 async def health_check(request):
-    return web.json_response({"status": "ok", "service_status_manager_error"})
+    return web.json_response({"status": "ok", "service_status_manager_error" : ""})
 
 async def on_startup(app):
     await bot.set_webhook(url=WEBHOOK_URL)
