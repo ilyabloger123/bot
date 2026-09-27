@@ -2,7 +2,6 @@ import sys
 import os
 import asyncio
 
-from aiohttp.web_app import Application
 from flask import Flask, request, jsonify
 
 from aiogram import Bot, Dispatcher, types
