@@ -3,7 +3,7 @@ import logging
 import sys
 import os
 
-from aiohttp import web
+from aiohttp import web, ClientSession
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import Update
 from config import Config
@@ -35,6 +35,31 @@ dp.include_router(settings_router)
 
 WEBHOOK_PATH = f"/webhook/{Config.BOT_TOKEN}/"
 WEBHOOK_URL = os.getenv("RENDER_EXTERNAL_URL") + WEBHOOK_PATH
+SELF_URL = os.getenv("RENDER_EXTERNAL_URL", "")
+
+async def self_ping():
+    if not SELF_URL:
+        logger.warning("RENDER_EXTERNAL_URL is not set, self-ping is disabled")
+        return
+    ping_url = f"{SELF_URL}/health"
+    logger.info(f"self-ping started, target: {ping_url}")
+
+    await asyncio.sleep(30)
+    async with ClientSession() as session:
+        while True:
+            try:
+                async with session.get(ping_url) as response:
+                    if response.status == 200:
+                        logger.info(f"self-ping is ok")
+                    else:
+                        logger.info(f"self-ping failed")
+            except asyncio.CancelledError:
+                logger.info(f"self-ping task cancelled")
+                return
+            except Exception as e:
+                logger.error(f"self-ping error: {e}")
+            await asyncio.sleep(600)
+
 
 async def handle_webhook(request):
     try:
@@ -45,6 +70,9 @@ async def handle_webhook(request):
     except Exception as e:
         logger.error(f"main.py 45: {e}")
         return web.json_response({"error": str(e)}, status=500)
+
+async def health_check(request):
+    return web.json_response({"status": "ok", "service_status_manager_error"})
 
 async def on_startup(app):
     await bot.set_webhook(url=WEBHOOK_URL)
