@@ -49,8 +49,9 @@ async def self_ping():
         while True:
             try:
                 async with session.get(ping_url) as response:
-                    if response.status == 200:
-                        logger.info(f"self-ping is ok")
+                    if response.ok:
+                        logger.info(f"self-ping is ok: {ping_url}")
+                        print(ping_url)
                     else:
                         logger.info(f"self-ping failed")
             except asyncio.CancelledError:
@@ -77,16 +78,24 @@ async def health_check(request):
 async def on_startup(app):
     await bot.set_webhook(url=WEBHOOK_URL)
     logger.info(f"Webhook set to {WEBHOOK_URL}")
+    app["ping_task"] = asyncio.create_task(self_ping())
+    logger.info("self-ping task started")
 
 async def on_shutdown(app):
+    if "ping_task" in app.keys():
+        app["ping_task"].cancel()
+    try:
+        await app["ping_task"]
+    except asyncio.CancelledError:
+        pass
     await bot.delete_webhook()
     await bot.session.close()
 
 def main():
     app = web.Application()
     app.router.add_post(WEBHOOK_PATH, handle_webhook)
-    app.router.add_get("/", lambda r: web.json_response({"status": "running"}))
-    app.router.add_get("/health", lambda r: web.json_response({"status": "ok"}))
+    app.router.add_get("/", health_check)
+    app.router.add_get("/health", health_check)
 
     app.on_startup.append(on_startup)
     app.on_shutdown.append(on_shutdown)
