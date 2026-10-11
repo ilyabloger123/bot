@@ -40,28 +40,6 @@ WEBHOOK_PATH = f"/webhook/{Config.BOT_TOKEN}/"
 WEBHOOK_URL = os.getenv("RENDER_EXTERNAL_URL") + WEBHOOK_PATH
 SELF_URL = os.getenv("RENDER_EXTERNAL_URL", "")
 
-def self_ping():
-    if not SELF_URL:
-        logger.warning("RENDER_EXTERNAL_URL is not set, self-ping is disabled")
-        return
-    ping_url = f"{SELF_URL}/health"
-    logger.info(f"self-ping started, target: {ping_url}")
-
-    time.sleep(60)
-    while True:
-        try:
-            response = requests.get(ping_url, timeout=15)
-            if response.status_code == 200:
-                logger.info(f"self-ping is ok: {ping_url}")
-            else:
-                logger.info(f"self-ping failed")
-        except asyncio.CancelledError:
-            logger.info(f"self-ping task cancelled")
-            return
-        except Exception as e:
-            logger.error(f"self-ping error: {e}")
-        time.sleep(600)
-
 
 async def handle_webhook(request):
     try:
@@ -79,17 +57,8 @@ async def health_check(request):
 async def on_startup(app):
     await bot.set_webhook(url=WEBHOOK_URL)
     logger.info(f"Webhook set to {WEBHOOK_URL}")
-    thread = threading.Thread(target=self_ping, daemon=True)
-    thread.start()
-    logger.info("self-ping task started")
 
 async def on_shutdown(app):
-    if "ping_task" in app.keys():
-        app["ping_task"].cancel()
-    try:
-        await app["ping_task"]
-    except asyncio.CancelledError:
-        pass
     await bot.delete_webhook()
     await bot.session.close()
 
