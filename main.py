@@ -1,6 +1,9 @@
 import asyncio
 import logging
 import sys
+import time
+import requests
+import threading
 import os
 
 from aiohttp import web, ClientSession
@@ -37,29 +40,27 @@ WEBHOOK_PATH = f"/webhook/{Config.BOT_TOKEN}/"
 WEBHOOK_URL = os.getenv("RENDER_EXTERNAL_URL") + WEBHOOK_PATH
 SELF_URL = os.getenv("RENDER_EXTERNAL_URL", "")
 
-async def self_ping():
+def self_ping():
     if not SELF_URL:
         logger.warning("RENDER_EXTERNAL_URL is not set, self-ping is disabled")
         return
     ping_url = f"{SELF_URL}/health"
     logger.info(f"self-ping started, target: {ping_url}")
 
-    await asyncio.sleep(30)
-    async with ClientSession() as session:
-        while True:
-            try:
-                async with session.get(ping_url) as response:
-                    if response.ok:
-                        logger.info(f"self-ping is ok: {ping_url}")
-                        print(ping_url)
-                    else:
-                        logger.info(f"self-ping failed")
-            except asyncio.CancelledError:
-                logger.info(f"self-ping task cancelled")
-                return
-            except Exception as e:
-                logger.error(f"self-ping error: {e}")
-            await asyncio.sleep(600)
+    time.sleep(60)
+    while True:
+        try:
+            response = requests.get(ping_url, timeout=15)
+            if response.status_code == 200:
+                logger.info(f"self-ping is ok: {ping_url}")
+            else:
+                logger.info(f"self-ping failed")
+        except asyncio.CancelledError:
+            logger.info(f"self-ping task cancelled")
+            return
+        except Exception as e:
+            logger.error(f"self-ping error: {e}")
+        time.sleep(600)
 
 
 async def handle_webhook(request):
@@ -78,7 +79,8 @@ async def health_check(request):
 async def on_startup(app):
     await bot.set_webhook(url=WEBHOOK_URL)
     logger.info(f"Webhook set to {WEBHOOK_URL}")
-    app["ping_task"] = asyncio.create_task(self_ping())
+    thread = threading.Thread(target=self_ping, daemon=True)
+    thread.start()
     logger.info("self-ping task started")
 
 async def on_shutdown(app):
